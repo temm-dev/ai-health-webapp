@@ -1,0 +1,27 @@
+[project]
+name = "health-app"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "temm-dev",email = "temm-dev@proton.me"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "tensorflow (>=2.20.0,<3.0.0)",
+    "numpy (>=2.3.3,<3.0.0)",
+    "pandas (>=2.3.3,<3.0.0)",
+    "pillow (>=11.3.0,<12.0.0)",
+    "matplotlib (>=3.10.6,<4.0.0)",
+    "seaborn (>=0.13.2,<0.14.0)",
+    "joblib (>=1.5.2,<2.0.0)",
+    "black (>=25.9.0,<26.0.0)",
+    "isort (>=6.1.0,<7.0.0)",
+    "fastapi[standard] (>=0.118.0,<0.119.0)",
+    "uvicorn[standard] (>=0.37.0,<0.38.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
