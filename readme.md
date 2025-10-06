@@ -1,4 +1,4 @@
-<h1 align="center"> AI HEALTH APP </h1>
+<h1 align="center"> AI-HEALTH-APP </h1>
 
 <p align="center">
   <img src="assets/images/health-up.jpg" alt="Project Demo" width="800">
