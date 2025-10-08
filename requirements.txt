@@ -1,0 +1,15 @@
+mediapipe
+deepface
+tensorflow
+pandas
+pillow
+matplotlib
+seaborn
+joblib
+black
+isort
+fastapi[standard]
+uvicorn[standard]
+numpy
+opencv-python
+tf-keras
