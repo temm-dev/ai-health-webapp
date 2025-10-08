@@ -13,3 +13,4 @@ uvicorn[standard]
 numpy
 opencv-python
 tf-keras
+torch
