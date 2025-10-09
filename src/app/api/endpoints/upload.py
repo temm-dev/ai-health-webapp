@@ -7,7 +7,7 @@ from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse
 from PIL import Image
 
-from app.models.schemas import UploadResponse
+from app.core.schemas import UploadResponse
 from app.services.face_analysis import FaceAnalysis
 
 router = APIRouter(tags=["upload"])
