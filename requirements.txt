@@ -14,3 +14,4 @@ numpy
 opencv-python
 tf-keras
 torch
+torchvision
