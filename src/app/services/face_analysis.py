@@ -5,7 +5,6 @@ from deepface import DeepFace
 
 
 class FaceAnalysis:
-
     async def analyze(
         self, image_path: str, actions=("age", "gender", "race", "emotion")
     ):

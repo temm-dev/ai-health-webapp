@@ -8,12 +8,13 @@ from torchvision import transforms
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PATH_MODELS = (PROJECT_ROOT / "app" / "models").as_posix() + "/"
+# PATH_TEST_IMAGES = (PROJECT_ROOT / "data" / "test_images").as_posix() + "/"
 
 
 torch.serialization.add_safe_globals([np.core.multiarray.scalar])  # type: ignore
 
 
-class SkinTest:
+class SkinTestAnalysis:
     def __init__(self) -> None:
         model_path = PATH_MODELS + "skin_model.pth"
         model = torch.load(model_path, map_location="cpu", weights_only=False)
@@ -35,7 +36,7 @@ class SkinTest:
 
         print("✅ Модель skin_model.pth успешно загружена!")
 
-    def normalize_probabilities(self, probabilities, decimals=5):
+    async def normalize_probabilities(self, probabilities, decimals=5):
         probs = np.array(probabilities)
 
         if abs(probs.sum() - 1.0) > 0.01:
@@ -45,8 +46,10 @@ class SkinTest:
 
         return normalized
 
-    def predict(self, image_path: str):
-        image = Image.open(image_path).convert("RGB")
+    async def analyze(self, image_path: str):
+        path = f"data/temp/{image_path}"
+
+        image = Image.open(path).convert("RGB")
         input_tensor = self.transform(image).unsqueeze(0)  # type: ignore
 
         with torch.no_grad():
@@ -55,7 +58,7 @@ class SkinTest:
 
             # Преобразуем tensor в numpy array и нормализуем
             probs_array = probabilities.numpy()
-            normalized_probs = self.normalize_probabilities(probs_array)
+            normalized_probs = await self.normalize_probabilities(probs_array)
 
             # Создаем словарь с классами и вероятностями
             result_dict = {
@@ -65,8 +68,3 @@ class SkinTest:
             }
 
         return result_dict
-
-
-# st = SkinTest()
-# print(st.predict(PATH_MODELS + "test.jpeg"))
-# Вывод: {0: 0.4011, 1: 0.14087, 2: 0.45803}
