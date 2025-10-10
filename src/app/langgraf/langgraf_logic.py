@@ -47,6 +47,7 @@ class State(TypedDict):
     sleep_quality: float
     skin_health_index: float
     vitality_score: float
+    user_message: str
 
 
 def transform_json_to_state(json_data: dict) -> State:
@@ -95,6 +96,7 @@ def transform_json_to_state(json_data: dict) -> State:
         "sleep_quality": sleep_quality,
         "skin_health_index": skin_health_index,
         "vitality_score": vitality_score,
+        "user_message": json_data.get("user_message") # type: ignore
     }
 
 
@@ -126,6 +128,9 @@ async def analyze_parameters(state: State):
         - Индекс здоровья кожи: {state['skin_health_index']}/1
         - Индекс жизнеспособности: {state['vitality_score']}/1
 
+        Пользовательское сообщение:
+        {state.get("user_message")}
+
         Сформулируй НАБЛЮДЕНИЯ (не диагнозы) в формате:
         - [нейтральное описание наблюдения]
 
@@ -141,6 +146,7 @@ async def analyze_parameters(state: State):
 
         Если значимых наблюдений нет, верни "Нет значимых наблюдений".
         Важно: не преувеличивай серьезность параметров, параметры порой могут быть преувеличены.
+        УЧТИ ПОЛЬЗОВАТЕЛЬСКОЕ СООБЩЕНИЕ при анализе, если оно предоставлено.
         """
 
         analysis_result = await llm.ainvoke(analysis_prompt)
