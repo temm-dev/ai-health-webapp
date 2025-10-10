@@ -14,6 +14,7 @@ from app.services.calculate_metrics import CalculateMetrics
 from app.services.face_analysis import FaceAnalysis
 from app.services.face_metrics import FaceMetricsAnalysis
 from app.services.skin_analysis import SkinTestAnalysis
+from app.langgraf.langgraf_logic import analyze_from_json
 
 router = APIRouter(tags=["upload"])
 
@@ -175,13 +176,14 @@ async def upload_file(
             except:
                 pass
 
-        response = {
-            "status": "success",
-            "filename": unique_filename,
-            "analyze": return_response,
-        }
+        
+        print(return_response)
+        
+        llmresponse = await analyze_from_json(return_response)
 
-        return JSONResponse(content=response)
+        print(llmresponse)
+
+        return JSONResponse(content=llmresponse)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
