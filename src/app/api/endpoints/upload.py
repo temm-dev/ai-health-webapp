@@ -132,6 +132,7 @@ async def upload_file(
             muscle_tension = metrics_face_data["muscle_tension"]  # type: ignore
             redness = skin_test_data["redness"]  # type: ignore
             acne = skin_test_data["acne"]  # type: ignore
+            facial_symmetry = metrics_face_data["facial_symmetry"] # type: ignore
 
             stress = calculate_metrics.calculate_stress_level(
                 emotions, eyebags, muscle_tension  # type: ignore
@@ -143,7 +144,13 @@ async def upload_file(
                 acne, redness, age  # type: ignore
             )
             vitality_score = calculate_metrics.calculate_vitality_score(
-                [stress, sleep_quality, calculate_skin_health_index]  # type: ignore
+                {
+                    "stress_level": stress,
+                    "sleep_quality": sleep_quality,
+                    "skin_health_index": calculate_skin_health_index,
+                    "facial_symmetry": facial_symmetry,
+                    "muscle_tension": muscle_tension
+                }  # type: ignore
             )
 
             stress = {"stress_level": stress}
