@@ -37,7 +37,9 @@ class SkinTestAnalysis:
 
             print("✅ Модель skin_model.pth успешно загружена!")
         except Exception as e:
-            print(f"ERROR: Class SkinTestAnalysis(torch) - {self.__init__.__name__}:\n{e}")
+            print(
+                f"ERROR: Class SkinTestAnalysis(torch) - {self.__init__.__name__}:\n{e}"
+            )
 
     async def normalize_probabilities(self, probabilities, decimals=5):
         try:
@@ -50,7 +52,9 @@ class SkinTestAnalysis:
 
             return normalized
         except Exception as e:
-            print(f"ERROR: Class SkinTestAnalysis(torch) - {self.normalize_probabilities.__name__}:\n{e}")
+            print(
+                f"ERROR: Class SkinTestAnalysis(torch) - {self.normalize_probabilities.__name__}:\n{e}"
+            )
 
     async def analyze(self, image_path: str):
         path = f"data/temp/{image_path}"
@@ -67,14 +71,14 @@ class SkinTestAnalysis:
                 probs_array = probabilities.numpy()
                 normalized_probs = await self.normalize_probabilities(probs_array)
             except Exception as e:
-                print(f"ERROR: Class SkinTestAnalysis(torch) - {self.analyze.__name__}:\n{e}")
+                print(
+                    f"ERROR: Class SkinTestAnalysis(torch) - {self.analyze.__name__}:\n{e}"
+                )
 
-
-        # Создаем словарь с классами и вероятностями
         result_dict = {
-            "acne": normalized_probs[0], # type: ignore
-            "redness": normalized_probs[1], # type: ignore
-            "eyebags": normalized_probs[2], # type: ignore
+            "acne": normalized_probs[0],  # type: ignore
+            "redness": normalized_probs[1],  # type: ignore
+            "eyebags": normalized_probs[2],  # type: ignore
         }
 
         return result_dict

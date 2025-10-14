@@ -20,8 +20,9 @@ class FaceAnalysis:
 
                 return objs[0]
         except Exception as e:
-            print(f"ERROR: Class FaceAnalysis(DeepFace) - {self.analyze.__name__}:\n{e}")
-
+            print(
+                f"ERROR: Class FaceAnalysis(DeepFace) - {self.analyze.__name__}:\n{e}"
+            )
 
         return {}
 
@@ -42,4 +43,6 @@ class FaceAnalysis:
 
                 return objs
         except Exception as e:
-            print(f"ERROR: Class FaceAnalysis(DeepFace) - {self.anti_spoofing_test.__name__}:\n{e}")
+            print(
+                f"ERROR: Class FaceAnalysis(DeepFace) - {self.anti_spoofing_test.__name__}:\n{e}"
+            )

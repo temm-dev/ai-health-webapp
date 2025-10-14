@@ -1,5 +1,7 @@
 class CalculateMetrics:
-    async def calculate_stress_level(self, emotion_data, eye_bags_score, facial_tension=0.5):
+    async def calculate_stress_level(
+        self, emotion_data, eye_bags_score, facial_tension=0.5
+    ):
         """
         Вычисляет уровень стресса на основе:
         - эмоционального состояния
