@@ -1,5 +1,5 @@
 class CalculateMetrics:
-    def calculate_stress_level(self, emotion_data, eye_bags_score, facial_tension=0.5):
+    async def calculate_stress_level(self, emotion_data, eye_bags_score, facial_tension=0.5):
         """
         Вычисляет уровень стресса на основе:
         - эмоционального состояния
@@ -37,7 +37,7 @@ class CalculateMetrics:
 
         return min(1.0, max(0.0, stress_level))
 
-    def calculate_sleep_quality(
+    async def calculate_sleep_quality(
         self, eye_bags_score, redness_score, eye_openness=0.7, age=30
     ):
         """
@@ -72,7 +72,7 @@ class CalculateMetrics:
 
         return max(0.0, min(1.0, sleep_quality))
 
-    def calculate_skin_health_index(
+    async def calculate_skin_health_index(
         self, acne_score, redness_score, age, skin_smoothness=0.7
     ):
         """
@@ -110,7 +110,7 @@ class CalculateMetrics:
 
         return max(0.0, min(1.0, skin_health_index))
 
-    def calculate_vitality_score(self, all_metrics, weights=None):
+    async def calculate_vitality_score(self, all_metrics, weights=None):
         """
         Композитный показатель на основе всех метрик
         """
