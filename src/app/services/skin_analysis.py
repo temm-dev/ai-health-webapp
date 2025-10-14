@@ -16,35 +16,41 @@ torch.serialization.add_safe_globals([np.core.multiarray.scalar])  # type: ignor
 
 class SkinTestAnalysis:
     def __init__(self) -> None:
-        model_path = PATH_MODELS + "skin_model.pth"
-        model = torch.load(model_path, map_location="cpu", weights_only=False)
+        try:
+            model_path = PATH_MODELS + "skin_model.pth"
+            model = torch.load(model_path, map_location="cpu", weights_only=False)
 
-        self.model = models.vit_b_16(weights=None)
-        self.model.heads[0] = torch.nn.Linear(in_features=768, out_features=3)
-        self.model.load_state_dict(model["model"])  # type: ignore
-        self.model.eval()
+            self.model = models.vit_b_16(weights=None)
+            self.model.heads[0] = torch.nn.Linear(in_features=768, out_features=3)
+            self.model.load_state_dict(model["model"])  # type: ignore
+            self.model.eval()
 
-        self.transform = transforms.Compose(
-            [
-                transforms.Resize((224, 224)),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
-            ]
-        )
+            self.transform = transforms.Compose(
+                [
+                    transforms.Resize((224, 224)),
+                    transforms.ToTensor(),
+                    transforms.Normalize(
+                        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                    ),
+                ]
+            )
 
-        print("✅ Модель skin_model.pth успешно загружена!")
+            print("✅ Модель skin_model.pth успешно загружена!")
+        except Exception as e:
+            print(f"ERROR: Class SkinTestAnalysis(torch) - {self.__init__.__name__}:\n{e}")
 
     async def normalize_probabilities(self, probabilities, decimals=5):
-        probs = np.array(probabilities)
+        try:
+            probs = np.array(probabilities)
 
-        if abs(probs.sum() - 1.0) > 0.01:
-            probs = probs / probs.sum()
+            if abs(probs.sum() - 1.0) > 0.01:
+                probs = probs / probs.sum()
 
-        normalized = [round(float(p), decimals) for p in probs]
+            normalized = [round(float(p), decimals) for p in probs]
 
-        return normalized
+            return normalized
+        except Exception as e:
+            print(f"ERROR: Class SkinTestAnalysis(torch) - {self.normalize_probabilities.__name__}:\n{e}")
 
     async def analyze(self, image_path: str):
         path = f"data/temp/{image_path}"
@@ -53,18 +59,22 @@ class SkinTestAnalysis:
         input_tensor = self.transform(image).unsqueeze(0)  # type: ignore
 
         with torch.no_grad():
-            output = self.model(input_tensor)
-            probabilities = torch.nn.functional.softmax(output[0], dim=0)
+            try:
+                output = self.model(input_tensor)
+                probabilities = torch.nn.functional.softmax(output[0], dim=0)
 
-            # Преобразуем tensor в numpy array и нормализуем
-            probs_array = probabilities.numpy()
-            normalized_probs = await self.normalize_probabilities(probs_array)
+                # Преобразуем tensor в numpy array и нормализуем
+                probs_array = probabilities.numpy()
+                normalized_probs = await self.normalize_probabilities(probs_array)
+            except Exception as e:
+                print(f"ERROR: Class SkinTestAnalysis(torch) - {self.analyze.__name__}:\n{e}")
 
-            # Создаем словарь с классами и вероятностями
-            result_dict = {
-                "acne": normalized_probs[0],
-                "redness": normalized_probs[1],
-                "eyebags": normalized_probs[2],
-            }
+
+        # Создаем словарь с классами и вероятностями
+        result_dict = {
+            "acne": normalized_probs[0], # type: ignore
+            "redness": normalized_probs[1], # type: ignore
+            "eyebags": normalized_probs[2], # type: ignore
+        }
 
         return result_dict
