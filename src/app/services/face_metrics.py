@@ -1,4 +1,4 @@
-from math import atan2, degrees, sqrt
+from math import sqrt
 from pathlib import Path
 
 import cv2
