@@ -7,7 +7,6 @@ from app.services.calculate_metrics import CalculateMetrics
 from app.services.face_analysis import FaceAnalysis
 from app.services.face_metrics import FaceMetricsAnalysis
 from app.services.skin_analysis import SkinTestAnalysis
-from app.utils.helpers import convert_numpy_types
 
 face_analysis = FaceAnalysis()
 skin_test = SkinTestAnalysis()
