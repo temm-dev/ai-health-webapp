@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.schemas import UploadResponse
 from app.langgraf.langgraf_logic import analyze_from_json
-from app.utils.utils import compress_image, image_processing
+from app.utils.helpers import compress_image, image_processing
 
 router = APIRouter(tags=["upload"])
 
