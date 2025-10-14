@@ -31,13 +31,13 @@ async def compress_image(image_data, max_size=(800, 800), quality=85):
         raise Exception(f"Image compression error: {str(e)}")
 
 
-async def convert_numpy_types(obj) -> dict | list | tuple | float | bool:
+def convert_numpy_types(obj) -> dict | list | tuple | float | bool:
     if isinstance(obj, dict):
         return {key: convert_numpy_types(value) for key, value in obj.items()}
     elif isinstance(obj, list):
         return [convert_numpy_types(element) for element in obj]
     elif isinstance(obj, tuple):
-        return tuple(convert_numpy_types(element) for element in obj)
+        return tuple(convert_numpy_types(element) for element in obj) # type: ignore
     elif isinstance(obj, (np.integer, np.int32, np.int64)):  # type: ignore
         return int(obj)
     elif isinstance(obj, (np.floating, np.float32, np.float64)):  # type: ignore
@@ -59,21 +59,21 @@ async def image_processing(
     skin_data = await skin_test.analyze(filename)
     metrics_data = await face_metrics_analysis.analyze(filename)
 
-    face_data = await convert_numpy_types(face_data)
-    skin_data = await convert_numpy_types(skin_data)
-    metrics_data = await convert_numpy_types(metrics_data)
+    face_data = convert_numpy_types(face_data)
+    skin_data = convert_numpy_types(skin_data)
+    metrics_data = convert_numpy_types(metrics_data)
 
     response.update(face_data)  # type: ignore
     response.update(skin_data)  # type: ignore
 
     age = face_data["age"]  # type: ignore
     emotions = response["emotion"]
-    eyebags = skin_test_data["eyebags"]  # type: ignore
-    average_eye_openness = metrics_face_data["average_eye_openness"]  # type: ignore
-    muscle_tension = metrics_face_data["muscle_tension"]  # type: ignore
-    redness = skin_test_data["redness"]  # type: ignore
-    acne = skin_test_data["acne"]  # type: ignore
-    facial_symmetry = metrics_face_data["facial_symmetry"]  # type: ignore
+    eyebags = skin_data["eyebags"]  # type: ignore
+    average_eye_openness = metrics_data["average_eye_openness"]  # type: ignore
+    muscle_tension = metrics_data["muscle_tension"]  # type: ignore
+    redness = skin_data["redness"]  # type: ignore
+    acne = skin_data["acne"]  # type: ignore
+    facial_symmetry = metrics_data["facial_symmetry"]  # type: ignore
 
     stress = await calculate_metrics.calculate_stress_level(
         emotions, eyebags, muscle_tension
@@ -99,7 +99,7 @@ async def image_processing(
     skin_health_index = {"skin_health_index": skin_health_index}
     vitality_score = {"vitality_score": vitality_score}
 
-    response.update(metrics_face_data)  # type: ignore
+    response.update(metrics_data)  # type: ignore
     response.update(stress)
     response.update(sleep_quality)
     response.update(skin_health_index)
