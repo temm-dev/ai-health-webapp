@@ -7,7 +7,7 @@ import numpy as np
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 PATH_MODELS = (PROJECT_ROOT / "app" / "models").as_posix() + "/"
-PATH_TEST_IMAGES = (PROJECT_ROOT / "data" / "test_images").as_posix() + "/"
+# PATH_TEST_IMAGES = (PROJECT_ROOT / "data" / "test_images").as_posix() + "/"
 
 
 class FaceMetricsAnalysis:
@@ -24,18 +24,21 @@ class FaceMetricsAnalysis:
         """Анализ всех метрик лица"""
         path = f"data/temp/{image_path}"
 
-        image = cv2.imread(path)
-        if image is None:
-            return None
+        try:
+            image = cv2.imread(path)
+            if image is None:
+                return None
 
-        rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        results = self.face_mesh.process(rgb_image)
+            rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            results = self.face_mesh.process(rgb_image)
 
-        if not results.multi_face_landmarks:
-            return None
+            if not results.multi_face_landmarks:
+                return None
 
-        landmarks = results.multi_face_landmarks[0]
-        image_height, image_width = image.shape[:2]
+            landmarks = results.multi_face_landmarks[0]
+            image_height, image_width = image.shape[:2]
+        except Exception as e:
+            print(f"ERROR: Class FaceMetricsAnalysis(mediapipe) - {self.analyze.__name__}:\n{e}")
 
         metrics = {
             **self._calculate_facial_symmetry(landmarks, image_width, image_height),
