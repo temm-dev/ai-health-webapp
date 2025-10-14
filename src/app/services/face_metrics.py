@@ -104,7 +104,7 @@ class FaceMetricsAnalysis:
         left_eye_indices = [386, 374, 263, 362]  # верх-низ левого глаза
         right_eye_indices = [159, 145, 33, 133]  # верх-низ правого глаза
 
-        def get_eye_openness(eye_indices):
+        async def get_eye_openness(eye_indices):
             """Вычисляет открытость для одного глаза"""
             points = []
             for idx in eye_indices:
@@ -130,8 +130,8 @@ class FaceMetricsAnalysis:
 
             return min(1.0, openness_ratio * 3)  # Нормализуем к 0-1
 
-        left_eye_openness = get_eye_openness(left_eye_indices)
-        right_eye_openness = get_eye_openness(right_eye_indices)
+        left_eye_openness = await get_eye_openness(left_eye_indices)
+        right_eye_openness = await get_eye_openness(right_eye_indices)
 
         return {
             "left_eye_openness": left_eye_openness,
