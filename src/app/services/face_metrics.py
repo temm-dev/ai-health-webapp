@@ -20,7 +20,7 @@ class FaceMetricsAnalysis:
             min_detection_confidence=0.5,
         )
 
-    def analyze(self, image_path):
+    async def analyze(self, image_path):
         """Анализ всех метрик лица"""
         path = f"data/temp/{image_path}"
 
@@ -38,17 +38,19 @@ class FaceMetricsAnalysis:
             landmarks = results.multi_face_landmarks[0]
             image_height, image_width = image.shape[:2]
         except Exception as e:
-            print(f"ERROR: Class FaceMetricsAnalysis(mediapipe) - {self.analyze.__name__}:\n{e}")
+            print(
+                f"ERROR: Class FaceMetricsAnalysis(mediapipe) - {self.analyze.__name__}:\n{e}"
+            )
 
         metrics = {
-            **self._calculate_facial_symmetry(landmarks, image_width, image_height),
-            **self._calculate_eye_openness(landmarks, image_width, image_height),
-            **self._calculate_muscle_tension(landmarks, image_width, image_height),
+            **await self._calculate_facial_symmetry(landmarks, image_width, image_height),
+            **await self._calculate_eye_openness(landmarks, image_width, image_height),
+            **await self._calculate_muscle_tension(landmarks, image_width, image_height),
         }
 
         return metrics
 
-    def _calculate_facial_symmetry(self, landmarks, image_width, image_height):
+    async def _calculate_facial_symmetry(self, landmarks, image_width, image_height):
         """Расчет симметрии лица"""
         # Ключевые симметричные точки
         left_points = []
@@ -96,7 +98,7 @@ class FaceMetricsAnalysis:
             < 0.1,  # Низкое std = высокая уверенность
         }
 
-    def _calculate_eye_openness(self, landmarks, image_width, image_height):
+    async def _calculate_eye_openness(self, landmarks, image_width, image_height):
         """Расчет открытости глаз"""
         # Индексы для левого и правого глаза (вертикальные измерения)
         left_eye_indices = [386, 374, 263, 362]  # верх-низ левого глаза
@@ -138,7 +140,7 @@ class FaceMetricsAnalysis:
             "eye_symmetry": 1 - abs(left_eye_openness - right_eye_openness),
         }
 
-    def _calculate_muscle_tension(self, landmarks, image_width, image_height):
+    async def _calculate_muscle_tension(self, landmarks, image_width, image_height):
         """Расчет напряжения лицевых мышц"""
         # 1. Напряжение бровей (расстояние между бровями)
         left_brow = landmarks.landmark[46]  # Левая бровь
