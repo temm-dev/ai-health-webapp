@@ -1,14 +1,10 @@
-import asyncio
-import json
+import logging
 import uuid
 from datetime import datetime
 from typing import List, TypedDict
 
-from langgraph.graph import END, StateGraph
-
-import logging
-
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.graph import END, StateGraph
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -20,24 +16,33 @@ llm = ChatGoogleGenerativeAI(
 )
 
 
-
-# TypedDict для совместимости с LangGraph
+# Обновленный TypedDict с учетом всех полей из JSON
 class State(TypedDict):
     age: int
     region: dict
     face_confidence: float
-    gender: str
+    gender: dict
     dominant_gender: str
-    race: str
+    race: dict
     dominant_race: str
-    emotion: str
+    emotion: dict
     dominant_emotion: str
     time: float
     antispoof_score: float
     is_real: bool
     acne: float
     redness: float
-    eye_bags: float
+    eyebags: float
+    facial_symmetry: float
+    symmetry_confidence: bool
+    left_eye_openness: float
+    right_eye_openness: float
+    average_eye_openness: float
+    eye_symmetry: float
+    muscle_tension: float
+    brow_tension: float
+    mouth_tension: float
+    forehead_tension: float
     red_flags: List[str]
     recommendations: str
     risk_level: str
@@ -54,49 +59,42 @@ def transform_json_to_state(json_data: dict) -> State:
     """Преобразует JSON данные в формат State"""
     # analyze_data = json_data.get("analyze", {})
 
-    # Извлекаем доминирующий пол из вероятностей
-    gender_data = json_data.get("gender", {})
-    dominant_gender = json_data.get("dominant_gender", "unknown")
-
-    # Извлекаем доминирующую расу из вероятностей
-    race_data = json_data.get("race", {})
-    dominant_race = json_data.get("dominant_race", "unknown")
-
-    # Извлекаем доминирующую эмоцию из вероятностей
-    emotion_data = json_data.get("emotion", {})
-    dominant_emotion = json_data.get("dominant_emotion", "neutral")
-
-    stress_level = json_data.get("stress_level", 0.0)
-    sleep_quality = json_data.get("sleep_quality", 0.0)
-    skin_health_index = json_data.get("skin_health_index", 0.0)
-    vitality_score = json_data.get("vitality_score", 0.0)
-
     return {
         "age": json_data.get("age", 0),
         "region": json_data.get("region", {}),
         "face_confidence": json_data.get("face_confidence", 0.0),
-        "gender": dominant_gender,
-        "dominant_gender": dominant_gender,
-        "race": dominant_race,
-        "dominant_race": dominant_race,
-        "emotion": dominant_emotion,
-        "dominant_emotion": dominant_emotion,
+        "gender": json_data.get("gender", {}),
+        "dominant_gender": json_data.get("dominant_gender", "unknown"),
+        "race": json_data.get("race", {}),
+        "dominant_race": json_data.get("dominant_race", "unknown"),
+        "emotion": json_data.get("emotion", {}),
+        "dominant_emotion": json_data.get("dominant_emotion", "neutral"),
         "time": json_data.get("time", 0.0),
-        "antispoof_score": 0.9,  # Дефолтное значение, так как в JSON нет антиспуфинга
-        "is_real": True,  # Предполагаем, что лицо реальное
+        "antispoof_score": 0.9,
+        "is_real": True,
         "acne": json_data.get("acne", 0.0),
         "redness": json_data.get("redness", 0.0),
-        "eye_bags": json_data.get("eyebags", 0.0),  # Обратите внимание на именование
+        "eyebags": json_data.get("eyebags", 0.0),
+        "facial_symmetry": json_data.get("facial_symmetry", 0.0),
+        "symmetry_confidence": json_data.get("symmetry_confidence", False),
+        "left_eye_openness": json_data.get("left_eye_openness", 0.0),
+        "right_eye_openness": json_data.get("right_eye_openness", 0.0),
+        "average_eye_openness": json_data.get("average_eye_openness", 0.0),
+        "eye_symmetry": json_data.get("eye_symmetry", 0.0),
+        "muscle_tension": json_data.get("muscle_tension", 0.0),
+        "brow_tension": json_data.get("brow_tension", 0.0),
+        "mouth_tension": json_data.get("mouth_tension", 0.0),
+        "forehead_tension": json_data.get("forehead_tension", 0.0),
         "red_flags": [],
         "recommendations": "",
         "risk_level": "low",
         "analysis_id": str(uuid.uuid4()),
         "timestamp": datetime.now().isoformat(),
-        "stress_level": stress_level,
-        "sleep_quality": sleep_quality,
-        "skin_health_index": skin_health_index,
-        "vitality_score": vitality_score,
-        "user_message": json_data.get("user_message") # type: ignore
+        "stress_level": json_data.get("stress_level", 0.0),
+        "sleep_quality": json_data.get("sleep_quality", 0.0),
+        "skin_health_index": json_data.get("skin_health_index", 0.0),
+        "vitality_score": json_data.get("vitality_score", 0.0),
+        "user_message": json_data.get("user_message", ""),
     }
 
 
@@ -108,73 +106,83 @@ async def analyze_parameters(state: State):
         # Преобразуем confidence в проценты для читаемости
         confidence_percent = int(state["face_confidence"] * 100)
 
+        # Получаем уровень нейтральной эмоции
+        neutral_emotion_percent = state["emotion"].get("neutral", 0.0)
+
         analysis_prompt = f"""
-        Ты - ассистент для первичного анализа состояния человека. 
-        Анализируй только наблюдаемые параметры, не ставь диагнозы.
+        Ты - медицинский ассистент для первичного анализа состояния человека. Анализируй только наблюдаемые параметры, не ставь диагнозы.
 
-        Параметры для анализа:
+        ДАННЫЕ ДЛЯ АНАЛИЗА:
         - Возраст: {state['age']}
+        - Пол: {state['dominant_gender']}
         - Уверенность распознавания: {confidence_percent}%
-        - Пол: {state['gender']}
-        - Доминирующая эмоция: {state['dominant_emotion']}
-        - Уровень акне: {state['acne']}/1
-        - Покраснение кожи: {state['redness']}/1  --- IGNORE ---
-        - Мешки под глазами: {state['eye_bags']}/1
-        - Симметрия лица: {state.get('facial_symmetry', 'N/A')}/1
-        - Средняя открытость глаз: {state.get('average_eye_openness', 'N/A')}/1
-        - Напряжение мышц лица: {state.get('muscle_tension', 'N/A')}/1
-        - Уровень стресса: {state['stress_level']}/1
-        - Качество сна: {state['sleep_quality']}/1
-        - Индекс здоровья кожи: {state['skin_health_index']}/1
-        - Индекс жизнеспособности: {state['vitality_score']}/1
+        - Доминирующая эмоция: {state['dominant_emotion']} (нейтральность: {neutral_emotion_percent:.1f}%)
+        - Уровень акне: {state['acne']:.4f}/1
+        - Мешки под глазами: {state['eyebags']:.4f}/1
+        - Симметрия лица: {state['facial_symmetry']:.3f}/1
+        - Открытость глаз: {state['average_eye_openness']:.3f}/1
+        - Напряжение мышц: {state['muscle_tension']:.3f}/1
+        - Уровень стресса: {state['stress_level']:.3f}/1
+        - Качество сна: {state['sleep_quality']:.3f}/1
+        - Здоровье кожи: {state['skin_health_index']:.3f}/1
+        - Индекс жизнеспособности: {state['vitality_score']:.3f}/1
 
-        Пользовательское сообщение:
-        {state.get("user_message")}
+        ПОЛЬЗОВАТЕЛЬСКОЕ СООБЩЕНИЕ: {state.get("user_message", "Не предоставлено")}
 
-        Сформулируй НАБЛЮДЕНИЯ (не диагнозы) в формате:
-        - [нейтральное описание наблюдения]
+        ИНСТРУКЦИЯ:
+        1. Проанализируй КАЖДЫЙ параметр отдельно
+        2. Формулируй только нейтральные наблюдения
+        3. Не делай медицинских заключений
+        4. Учитывай возрастные нормы
+        5. Если параметр близок к 0 или 1 - укажи на это
+
+        ФОРМАТ ОТВЕТА (только наблюдения):
+        - Эмоциональное состояние: [наблюдение]
+        - Состояние кожи: [наблюдение] 
+        - Область глаз: [наблюдение]
+        - Мышечное напряжение: [наблюдение]
+        - Общие показатели: [наблюдение]
 
         Примеры корректных формулировок:
-        ✅ "Наблюдается выраженная эмоция грусти"
-        ✅ "Присутствуют заметные проявления акне"
-        ✅ "Обнаружены мешки под глазами средней выраженности"
-        
-        ❌ НЕДОПУСТИМО: 
-        ❌ "Может указывать на депрессию" 
-        ❌ "Свидетельствует о гормональных проблемах"
-        ❌ "Может быть признаком заболевания почек"
+        ✅ "Наблюдается преимущественно нейтральное эмоциональное состояние"
+        ✅ "Присутствуют минимальные проявления акне"
+        ✅ "Обнаружена выраженная асимметрия черт лица"
+        ✅ "Зафиксирован повышенный уровень мышечного напряжения"
 
-        Если значимых наблюдений нет, верни "Нет значимых наблюдений".
-        Важно: не преувеличивай серьезность параметров, параметры порой могут быть преувеличены.
-        УЧТИ ПОЛЬЗОВАТЕЛЬСКОЕ СООБЩЕНИЕ при анализе, если оно предоставлено.
+        Если все параметры в норме, укажи "Значимых отклонений не обнаружено".
         """
 
         analysis_result = await llm.ainvoke(analysis_prompt)
 
-        # Упрощенный парсинг
+        # Упрощенный парсинг ответа
         observations = []
-        if "Нет значимых наблюдений" not in analysis_result.content:
+        if "Значимых отклонений не обнаружено" not in analysis_result.content:
             lines = analysis_result.content.strip().split("\n") # type: ignore
             for line in lines:
                 line = line.strip()
-                if line.startswith("-"):
+                if line.startswith("-") and ":" in line:
                     observation = line[1:].strip()
-                    if observation and observation != "Нет значимых наблюдений":
+                    if (
+                        observation
+                        and "Значимых отклонений не обнаружено" not in observation
+                    ):
                         observations.append(observation)
 
         # Оценка уровня риска на основе объективных параметров
         risk_factors = 0
-        if state["dominant_emotion"] in ["sad", "angry"]:
+        if state["dominant_emotion"] in ["sad", "angry", "fear"]:
             risk_factors += 1
         if state["acne"] > 0.5:
             risk_factors += 1
-        if state["eye_bags"] > 0.53:
+        if state["eyebags"] > 0.5:
             risk_factors += 1
-        if state["redness"] > 0.8:
+        if state["stress_level"] > 0.7:
+            risk_factors += 1
+        if state["sleep_quality"] < 0.5:
             risk_factors += 1
 
         risk_level = (
-            "high" if risk_factors >= 2 else "medium" if risk_factors == 1 else "low"
+            "high" if risk_factors >= 3 else "medium" if risk_factors >= 1 else "low"
         )
 
         print("=" * 60)
@@ -184,7 +192,7 @@ async def analyze_parameters(state: State):
             for i, obs in enumerate(observations, 1):
                 print(f"📝 {i}. {obs}")
         else:
-            print("✅ Нет значимых наблюдений")
+            print("✅ Значимых отклонений не обнаружено")
         print(f"📊 Уровень риска: {risk_level.upper()}")
         print("=" * 60)
 
@@ -215,37 +223,35 @@ async def generate_recommendations(state: State):
             return state
 
         recommendations_prompt = f"""
-        На основе следующих наблюдений предложи практические рекомендации:
+        На основе предоставленных наблюдений предложи практические рекомендации общего характера.
 
-        НАБЛЮДЕНИЯ:
+        НАБЛЮДЕНИЯ ДЛЯ АНАЛИЗА:
         {chr(10).join(f'- {obs}' for obs in state['red_flags'])}
 
         КОНТЕКСТ:
         - Возраст: {state['age']}
-        - Пол: {state['gender']}
-        - Уровень риска: {state['risk_level']}
+        - Пол: {state['dominant_gender']}
+        - Индекс жизнеспособности: {state['vitality_score']:.3f}/1
 
-        ⚠️ ВАЖНЫЕ ОГРАНИЧЕНИЯ:
-        - НЕ назначай лекарства
-        - НЕ ставь диагнозы  
-        - НЕ рекомендую конкретных врачей
-        - Дай общие советы по улучшению качества жизни
-        - Максимальная длина: 300 слов
-        - Используй простой язык
+        СТРОГИЕ ОГРАНИЧЕНИЯ:
+        - ЗАПРЕЩЕНО назначать лекарства и БАДы
+        - ЗАПРЕЩЕНО ставить диагнозы
+        - ЗАПРЕЩЕНО рекомендовать конкретных врачей
+        - Только общие советы по улучшению качества жизни
+        - Максимум 250 слов
+        - Простой, доступный язык
 
-        📋 ФОРМАТ ОТВЕТА:
-        ## Основные рекомендации
-        [1-2 общих совета]
+        ТРЕБУЕМЫЙ ФОРМАТ ОТВЕТА:
+        Основные рекомендации
+        [1-2 самых важных общих совета]
 
-        ## Конкретные действия  
-        [3-5 практических шагов]
+        Конкретные действия
+        [3-5 практических шагов, которые можно выполнить]
 
-        ## Когда стоит проконсультироваться
-        [общие ситуации для обращения к специалистам]
+        Когда стоит проконсультироваться
+        [2-3 общие ситуации для обращения к специалистам]
 
-        ВАЖНО: Не используй спец. символы в тексте.
-        Твой ответ будет использоваться сразу на сайте, поэтому он должен быть простым,
-        без спец. символов, без переводов строк и тд.
+        ВАЖНО: Ответ должен быть единым текстом без Markdown разметки, специальных символов и переносов строк.
         """
 
         recommendations_result = await llm.ainvoke(recommendations_prompt)

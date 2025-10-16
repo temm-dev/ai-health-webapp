@@ -1,13 +1,9 @@
 mediapipe
 deepface
-tensorflow
-pandas
 pillow
-matplotlib
-seaborn
-joblib
 black
 isort
+pydantic
 fastapi[standard]
 uvicorn[standard]
 numpy
