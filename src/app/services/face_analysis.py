@@ -3,6 +3,9 @@ import time
 
 from deepface import DeepFace
 
+DEEPFACE_PATH = "app/models/"
+os.environ["DEEPFACE_HOME"] = DEEPFACE_PATH
+
 
 class FaceAnalysis:
     async def analyze(
