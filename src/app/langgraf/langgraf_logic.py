@@ -157,7 +157,7 @@ async def analyze_parameters(state: State):
         # Упрощенный парсинг ответа
         observations = []
         if "Значимых отклонений не обнаружено" not in analysis_result.content:
-            lines = analysis_result.content.strip().split("\n")
+            lines = analysis_result.content.strip().split("\n") # type: ignore
             for line in lines:
                 line = line.strip()
                 if line.startswith("-") and ":" in line:
@@ -259,7 +259,7 @@ async def generate_recommendations(state: State):
         # Добавляем медицинский дисклеймер
         disclaimer = "\n\n---\n*Важно: данные рекомендации носят общеоздоровительный характер и не заменяют консультацию специалиста.*"
 
-        recommendations = recommendations_result.content + disclaimer
+        recommendations = recommendations_result.content + disclaimer # type: ignore
 
         print("РЕКОМЕНДАЦИИ:")
         print("=" * 60)
