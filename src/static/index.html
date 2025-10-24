@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Health Face Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        #preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 20px auto;
+            display: none;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: #f8f9fa;
+            display: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .options {
+            margin: 20px 0;
+            text-align: left;
+        }
+        .options label {
+            display: block;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Анализ здоровья по лицу</h1>
+        <p>Загрузите фотографию лица для анализа здоровья</p>
+        
+        <div class="options">
+            <label>
+                <input type="checkbox" id="antiSpoofing" value="1">
+                Включить проверку на спуфинг
+            </label>
+            <div>
+                <strong>Действия:</strong>
+                <label><input type="checkbox" name="actions" value="age" checked> Возраст</label>
+                <label><input type="checkbox" name="actions" value="gender" checked> Пол</label>
+                <label><input type="checkbox" name="actions" value="race" checked> Раса</label>
+                <label><input type="checkbox" name="actions" value="emotion" checked> Эмоции</label>
+                <label><input type="checkbox" name="actions" value="all"> Все</label>
+            </div>
+        </div>
+
+        <div class="upload-area" id="uploadArea">
+            <p>Перетащите фото сюда или кликните для выбора</p>
+            <p><small>Поддерживаемые форматы: JPG, PNG, JPEG</small></p>
+            <input type="file" id="fileInput" accept="image/*" style="display: none;">
+        </div>
+
+        <img id="preview" alt="Предпросмотр">
+
+        <div style="text-align: center;">
+            <button id="analyzeBtn" disabled>Проанализировать</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Анализируем изображение...</p>
+        </div>
+
+        <div class="result" id="result">
+            <h3>Результаты анализа:</h3>
+            <pre id="resultText"></pre>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const preview = document.getElementById('preview');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const resultText = document.getElementById('resultText');
+        const antiSpoofing = document.getElementById('antiSpoofing');
+        const actionCheckboxes = document.querySelectorAll('input[name="actions"]');
+
+        // Обработчики для drag and drop
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Пожалуйста, выберите изображение');
+                return;
+            }
+
+            // Показ превью
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                analyzeBtn.disabled = false;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Обработка выбора "Все"
+        actionCheckboxes.forEach(checkbox => {
+            if (checkbox.value === 'all') {
+                checkbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        actionCheckboxes.forEach(cb => {
+                            if (cb.value !== 'all') cb.checked = false;
+                        });
+                    }
+                });
+            } else {
+                checkbox.addEventListener('change', () => {
+                    document.querySelector('input[value="all"]').checked = false;
+                });
+            }
+        });
+
+        // Отправка на анализ
+        analyzeBtn.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Добавляем выбранные actions
+            const selectedActions = Array.from(actionCheckboxes)
+                .filter(cb => cb.checked && cb.value !== 'all')
+                .map(cb => cb.value);
+            
+            if (selectedActions.length > 0) {
+                selectedActions.forEach(action => {
+                    formData.append('actions', action);
+                });
+            }
+
+            // Добавляем anti-spoofing
+            formData.append('anti_spoofing_test', antiSpoofing.checked ? '1' : '0');
+
+            loading.style.display = 'block';
+            result.style.display = 'none';
+            analyzeBtn.disabled = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/api/v1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Ошибка: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Форматируем JSON для красивого отображения
+                resultText.textContent = JSON.stringify(data, null, 2);
+                result.style.display = 'block';
+                
+            } catch (error) {
+                alert('Ошибка при анализе: ' + error.message);
+                console.error('Error:', error);
+            } finally {
+                loading.style.display = 'none';
+                analyzeBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
