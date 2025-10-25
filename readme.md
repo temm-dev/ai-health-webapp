@@ -27,7 +27,7 @@ The user visits the website / application / telegram bot, uploads a photo or vid
 - Asyncio/Aiohttp/Aiofiles (asynchronous operations)
 
 ### **Frontend**
-- soon
+- HTML, CSS, JS
 
 <br>
 <br>
